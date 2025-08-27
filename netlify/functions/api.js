@@ -1,110 +1,106 @@
-import express from 'express';
-import cors from 'cors';
-import serverless from 'serverless-http';
-import dotenv from 'dotenv';
-import connectDB from './config/database.js';
-
-// Import API routes
-import authRoutes from './routes/auth.js';
-import profileRoutes from './routes/profile.js';
-import uploadRoutes from './routes/upload.js';
-
-// Load environment variables
-dotenv.config();
-
-const app = express();
-
-// CORS configuration
-const corsOptions = {
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://st10482726photoshare.netlify.app'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
-
-app.use(cors(corsOptions));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Initialize database connection
-let dbInitialized = false;
-
-async function initializeDatabase() {
-  if (!dbInitialized) {
-    try {
-      await connectDB();
-      console.log('Database connected successfully');
-      global.mongoDBAvailable = true;
-      dbInitialized = true;
-    } catch (error) {
-      console.error('Database connection failed:', error);
-      global.mongoDBAvailable = false;
-    }
-  }
-}
-
-// Middleware to ensure database is initialized
-app.use(async (req, res, next) => {
-  await initializeDatabase();
-  next();
-});
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date().toISOString(),
-    mongodb: global.mongoDBAvailable || false
-  });
-});
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/upload', uploadRoutes);
-
-// Error handling middleware
-app.use((error, req, res, next) => {
-  console.error('API Error:', error);
-  res.status(500).json({
-    success: false,
-    error: 'Internal server error',
-    message: error.message
-  });
-});
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'Endpoint not found',
-    path: req.originalUrl
-  });
-});
-
-// Add debugging for Netlify Functions
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
-  next();
-});
-
-// Export the serverless function with error handling
-const handler = serverless(app);
-
-export { handler };
-
-// Add a simple health check at root level
-export const healthCheck = async (event, context) => {
-  return {
-    statusCode: 200,
-    body: JSON.stringify({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      event: event.httpMethod + ' ' + event.path
-    })
+// Simple Netlify Function for testing
+export const handler = async (event, context) => {
+  console.log('Function called:', event.httpMethod, event.path);
+  
+  // Handle CORS
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Content-Type': 'application/json'
   };
+  
+  // Handle preflight requests
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: ''
+    };
+  }
+  
+  try {
+    const path = event.path.replace('/.netlify/functions/api', '');
+    
+    // Health check endpoint
+    if (path === '/health' || path === '/api/health' || path === '') {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          status: 'ok',
+          timestamp: new Date().toISOString(),
+          path: event.path,
+          method: event.httpMethod
+        })
+      };
+    }
+    
+    // Profile endpoint
+    if (path === '/profile' || path === '/api/profile') {
+      if (event.httpMethod === 'GET') {
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            success: true,
+            profile: {
+              firstName: 'Test',
+              lastName: 'User',
+              profileImage: null
+            }
+          })
+        };
+      }
+      
+      if (event.httpMethod === 'PUT') {
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            success: true,
+            message: 'Profile updated successfully'
+          })
+        };
+      }
+    }
+    
+    // Upload endpoint
+    if (path === '/upload' || path === '/api/upload') {
+      if (event.httpMethod === 'POST') {
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            success: true,
+            message: 'Image uploaded successfully',
+            imageUrl: 'data:image/jpeg;base64,test'
+          })
+        };
+      }
+    }
+    
+    // 404 for other paths
+    return {
+      statusCode: 404,
+      headers,
+      body: JSON.stringify({
+        success: false,
+        error: 'Endpoint not found',
+        path: event.path
+      })
+    };
+    
+  } catch (error) {
+    console.error('Function error:', error);
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({
+        success: false,
+        error: 'Internal server error',
+        message: error.message
+      })
+    };
+  }
 };
