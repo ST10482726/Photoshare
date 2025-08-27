@@ -1,13 +1,13 @@
 import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
-import express from 'express';
-import serverless from 'serverless-http';
-import cors from 'cors';
-import mongoose from 'mongoose';
+const express = require('express');
+const serverless = require('serverless-http');
+const cors = require('cors');
+const mongoose = require('mongoose');
 
 // Import routes
-import authRoutes from '../../api/routes/auth';
-import profileRoutes from '../../api/routes/profile';
-import uploadRoutes from '../../api/routes/upload';
+const authRoutes = require('../../api/routes/auth');
+const profileRoutes = require('../../api/routes/profile');
+const uploadRoutes = require('../../api/routes/upload');
 
 const app = express();
 
@@ -85,4 +85,4 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
   return await serverlessHandler(event, context) as any;
 };
 
-export { handler };
+exports.handler = handler;

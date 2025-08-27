@@ -47,11 +47,24 @@ const EditPage: React.FC = () => {
       }
       
       const data = await response.json();
-      setProfile(data.profile);
-      setFormData({
-        firstName: data.profile.firstName || '',
-        lastName: data.profile.lastName || ''
-      });
+      
+      // Check if profile data exists
+      if (data && data.profile) {
+        setProfile({
+          _id: data.profile._id,
+          firstName: data.profile.firstName || '',
+          lastName: data.profile.lastName || '',
+          profileImage: data.profile.profileImage || '/kheepo-profile.jpg'
+        });
+        
+        setFormData({
+          firstName: data.profile.firstName || '',
+          lastName: data.profile.lastName || ''
+        });
+      } else {
+        console.error('No profile data received:', data);
+        toast.error('Failed to load profile data');
+      }
     } catch (error) {
       console.error('Error loading profile:', error);
       toast.error('Failed to load profile data');
@@ -140,6 +153,9 @@ const EditPage: React.FC = () => {
       if (profile) {
         setProfile(prev => prev ? { ...prev, profileImage: data.imageUrl } : null);
       }
+      
+      // Reload profile data to ensure consistency
+      await loadProfile();
       
       setPreviewImage(null);
       toast.success('Profile image updated successfully!');

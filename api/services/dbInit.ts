@@ -1,6 +1,6 @@
-import Profile from '../models/Profile';
+import Profile from '../models/Profile.js';
 
-export const initializeDefaultProfile = async (): Promise<void> => {
+const initializeDefaultProfile = async (): Promise<void> => {
   try {
     // Check if any profile exists
     const existingProfile = await Profile.findOne();
@@ -25,7 +25,7 @@ export const initializeDefaultProfile = async (): Promise<void> => {
   }
 };
 
-export const getOrCreateProfile = async () => {
+const getOrCreateProfile = async () => {
   try {
     let profile = await Profile.findOne();
     
@@ -47,3 +47,5 @@ export const getOrCreateProfile = async () => {
     throw error;
   }
 };
+
+export { initializeDefaultProfile, getOrCreateProfile };

@@ -1,17 +1,9 @@
 import express, { Request, Response } from 'express';
-import Profile from '../models/Profile';
-import { getOrCreateProfile } from '../services/dbInit';
+import Profile from '../models/Profile.js';
+import { getOrCreateProfile } from '../services/dbInit.js';
+import { getFallbackProfile, updateFallbackProfile } from '../services/fallbackProfile.js';
 
 const router = express.Router();
-
-// Fallback in-memory profile for development
-let fallbackProfile = {
-  id: '1',
-  firstName: 'Kheepo',
-  lastName: 'Motsinoi',
-  profileImage: '/kheepo-profile.jpg',
-  updatedAt: new Date().toISOString()
-};
 
 // GET /api/profile - Get user profile
 router.get('/', async (req: Request, res: Response) => {
@@ -22,11 +14,13 @@ router.get('/', async (req: Request, res: Response) => {
         const profile = await getOrCreateProfile();
         
         return res.json({
-          id: profile._id,
-          firstName: profile.firstName,
-          lastName: profile.lastName,
-          profileImage: profile.profileImage,
-          updatedAt: profile.updatedAt
+          profile: {
+            _id: profile._id,
+            firstName: profile.firstName,
+            lastName: profile.lastName,
+            profileImage: profile.profileImage,
+            updatedAt: profile.updatedAt
+          }
         });
       } catch (error) {
         console.error('MongoDB error, using fallback profile:', error);
@@ -36,12 +30,28 @@ router.get('/', async (req: Request, res: Response) => {
     
     // Use fallback profile if MongoDB is not available
     console.log('Using fallback profile data');
-    res.json(fallbackProfile);
+    const fallbackData = getFallbackProfile();
+    res.json({
+      profile: {
+        _id: fallbackData._id,
+        firstName: fallbackData.firstName,
+        lastName: fallbackData.lastName,
+        profileImage: fallbackData.profileImage,
+        updatedAt: fallbackData.updatedAt
+      }
+    });
   } catch (error) {
     console.error('Error in profile GET route:', error);
+    const fallbackData = getFallbackProfile();
     res.status(500).json({
       error: 'Failed to load profile data',
-      fallback: fallbackProfile
+      profile: {
+        _id: fallbackData._id,
+        firstName: fallbackData.firstName,
+        lastName: fallbackData.lastName,
+        profileImage: fallbackData.profileImage,
+        updatedAt: fallbackData.updatedAt
+      }
     });
   }
 });
@@ -104,13 +114,20 @@ router.put('/', async (req: Request, res: Response) => {
     
     // Update fallback profile if MongoDB is not available
     console.log('Updating fallback profile data');
-    fallbackProfile.firstName = firstName.trim();
-    fallbackProfile.lastName = lastName.trim();
-    fallbackProfile.updatedAt = new Date().toISOString();
+    const updatedProfile = updateFallbackProfile({
+      firstName: firstName.trim(),
+      lastName: lastName.trim()
+    });
     
     res.json({
       success: true,
-      profile: fallbackProfile,
+      profile: {
+        id: updatedProfile._id,
+        firstName: updatedProfile.firstName,
+        lastName: updatedProfile.lastName,
+        profileImage: updatedProfile.profileImage,
+        updatedAt: updatedProfile.updatedAt
+      },
       note: 'Profile updated in fallback mode (MongoDB unavailable)'
     });
   } catch (error) {

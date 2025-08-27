@@ -1,7 +1,8 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose from 'mongoose';
+const { Schema } = mongoose;
 
-export interface IImageMetadata extends Document {
-  profileId: mongoose.Types.ObjectId;
+interface IImageMetadata {
+  profileId: any;
   originalName: string;
   fileName: string;
   mimeType: string;
@@ -10,7 +11,7 @@ export interface IImageMetadata extends Document {
   updatedAt: Date;
 }
 
-const imageMetadataSchema = new Schema<IImageMetadata>({
+const imageMetadataSchema = new Schema({
   profileId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Profile',
@@ -43,6 +44,6 @@ const imageMetadataSchema = new Schema<IImageMetadata>({
 imageMetadataSchema.index({ profileId: 1 });
 imageMetadataSchema.index({ fileName: 1 }, { unique: true });
 
-const ImageMetadata = mongoose.model<IImageMetadata>('ImageMetadata', imageMetadataSchema);
+const ImageMetadata = mongoose.model('ImageMetadata', imageMetadataSchema);
 
 export default ImageMetadata;

@@ -2,7 +2,7 @@
  * This is a user authentication API route demo.
  * Handle user registration, login, token management, etc.
  */
-import { Router, type Request, type Response } from 'express';
+import { Router, Request, Response } from 'express';
 
 
 const router = Router();

@@ -2,23 +2,24 @@
  * This is a API server
  */
 
-import express, { type Request, type Response, type NextFunction }  from 'express';
+import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
+
 import connectDB from './config/database.js';
 import { initializeDefaultProfile } from './services/dbInit.js';
 import authRoutes from './routes/auth.js';
 import profileRoutes from './routes/profile.js';
 import uploadRoutes from './routes/upload.js';
 
-// for esm mode
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 // load env
 dotenv.config();
+
+// ES module __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Connect to MongoDB
 connectDB().then(() => {
@@ -27,7 +28,7 @@ connectDB().then(() => {
 });
 
 
-const app: express.Application = express();
+const app = express();
 
 // CORS configuration
 const corsOptions = {
@@ -57,7 +58,7 @@ app.use('/api/upload', uploadRoutes);
 /**
  * health
  */
-app.use('/api/health', (req: Request, res: Response, next: NextFunction): void => {
+app.use('/api/health', (req, res, next) => {
   res.status(200).json({
     success: true,
     message: 'ok'
@@ -67,7 +68,7 @@ app.use('/api/health', (req: Request, res: Response, next: NextFunction): void =
 /**
  * error handler middleware
  */
-app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((error, req, res, next) => {
   res.status(500).json({
     success: false,
     error: 'Server internal error'
@@ -77,7 +78,7 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
 /**
  * 404 handler
  */
-app.use((req: Request, res: Response) => {
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     error: 'API not found'

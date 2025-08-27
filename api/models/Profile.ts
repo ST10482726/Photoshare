@@ -1,14 +1,16 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose from 'mongoose';
+const { Schema } = mongoose;
 
-export interface IProfile extends Document {
+interface IProfile {
+  _id?: any;
   firstName: string;
   lastName: string;
   profileImage: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-const profileSchema = new Schema<IProfile>({
+const profileSchema = new Schema({
   firstName: {
     type: String,
     required: true,
@@ -33,6 +35,6 @@ const profileSchema = new Schema<IProfile>({
 profileSchema.index({ firstName: 1, lastName: 1 });
 profileSchema.index({ updatedAt: -1 });
 
-const Profile = mongoose.model<IProfile>('Profile', profileSchema);
+const Profile = mongoose.model('Profile', profileSchema);
 
 export default Profile;

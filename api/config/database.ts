@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const connectDB = async (retries = 3): Promise<void> => {
+const connectDB = async (retries = 3) => {
   const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/photoshare';
   
   // Initialize MongoDB availability flag
@@ -28,7 +28,7 @@ const connectDB = async (retries = 3): Promise<void> => {
       });
       console.log('✅ MongoDB connected successfully');
       return;
-    } catch (error: any) {
+    } catch (error) {
       console.error(`❌ Connection attempt ${attempt} failed:`, error.message);
       
       if (attempt === retries) {

@@ -1,10 +1,24 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs/promises';
-import Profile from '../models/Profile';
-import ImageMetadata from '../models/ImageMetadata';
-import { getOrCreateProfile } from '../services/dbInit';
+import Profile from '../models/Profile.js';
+import ImageMetadata from '../models/ImageMetadata.js';
+import { getOrCreateProfile } from '../services/dbInit.js';
+import { getFallbackProfile, updateFallbackProfile } from '../services/fallbackProfile.js';
+
+// Type definitions for multer
+interface MulterFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+  destination?: string;
+  filename?: string;
+  path?: string;
+  stream?: any;
+}
 
 const router = express.Router();
 
@@ -26,7 +40,7 @@ const upload = multer({
 });
 
 // POST /api/upload - Upload profile image
-router.post('/', upload.single('image'), async (req: Request, res: Response) => {
+router.post('/', upload.single('image'), async (req: Request & { file?: MulterFile }, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -35,48 +49,67 @@ router.post('/', upload.single('image'), async (req: Request, res: Response) => 
       });
     }
 
-    // Get or create profile
-    const profile = await getOrCreateProfile();
+    let profile;
+    let usingFallback = false;
+    
+    // Try to get or create profile from MongoDB
+    if ((global as any).mongoDBAvailable !== false) {
+      try {
+        profile = await getOrCreateProfile();
+      } catch (error) {
+        console.error('MongoDB error during upload, using fallback profile:', error);
+        (global as any).mongoDBAvailable = false;
+        profile = getFallbackProfile();
+        usingFallback = true;
+      }
+    } else {
+      console.log('Using fallback profile for upload');
+      profile = getFallbackProfile();
+      usingFallback = true;
+    }
 
-    // Generate unique filename with original extension
+    // For Netlify Functions, store image as base64 data URL since file system is ephemeral
+    const base64Data = req.file.buffer.toString('base64');
+    const imageUrl = `data:${req.file.mimetype};base64,${base64Data}`;
+    
+    // Generate unique filename for metadata tracking
     const timestamp = Date.now();
     const fileExtension = path.extname(req.file.originalname) || '.jpg';
     const fileName = `profile-${profile._id}-${timestamp}${fileExtension}`;
-    
-    // Define upload directory and file path
-    const uploadDir = path.join(process.cwd(), 'public/uploads');
-    const filePath = path.join(uploadDir, fileName);
-    
-    // Ensure upload directory exists
-    try {
-      await fs.access(uploadDir);
-    } catch {
-      await fs.mkdir(uploadDir, { recursive: true });
+
+    // Save image metadata (only if MongoDB is available)
+    if (!usingFallback) {
+      try {
+        const imageMetadata = new ImageMetadata({
+          profileId: profile._id,
+          originalName: req.file.originalname,
+          fileName: fileName,
+          mimeType: req.file.mimetype,
+          fileSize: req.file.size
+        });
+        
+        await imageMetadata.save();
+
+        // Update profile with new image (base64 data URL)
+        profile.profileImage = imageUrl;
+        await profile.save();
+      } catch (dbError) {
+        console.error('MongoDB error saving metadata, continuing with file upload:', dbError);
+        (global as any).mongoDBAvailable = false;
+        // Update shared fallback profile
+        updateFallbackProfile({ profileImage: imageUrl });
+      }
+    } else {
+      // Update shared fallback profile
+      updateFallbackProfile({ profileImage: imageUrl });
     }
-
-    // Save the uploaded file directly (without Sharp processing)
-    await fs.writeFile(filePath, req.file.buffer);
-
-    // Save image metadata
-    const imageMetadata = new ImageMetadata({
-      profileId: profile._id,
-      originalName: req.file.originalname,
-      fileName: fileName,
-      mimeType: req.file.mimetype, // Keep original mime type
-      fileSize: req.file.size
-    });
     
-    await imageMetadata.save();
-
-    // Update profile with new image path
-    const imageUrl = `/uploads/${fileName}`;
-    profile.profileImage = imageUrl;
-    await profile.save();
-
     res.json({
       success: true,
       imageUrl: imageUrl,
-      message: 'Image uploaded successfully'
+      message: usingFallback ? 
+        'Image uploaded successfully (fallback mode - MongoDB unavailable)' : 
+        'Image uploaded successfully'
     });
 
   } catch (error) {
@@ -99,7 +132,7 @@ router.post('/', upload.single('image'), async (req: Request, res: Response) => 
 });
 
 // Error handling middleware for multer
-router.use((error: any, req: Request, res: Response, next: any) => {
+router.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     return res.status(400).json({
       success: false,
