@@ -3,9 +3,11 @@ import cors from 'cors';
 import serverless from 'serverless-http';
 import dotenv from 'dotenv';
 import connectDB from '../../api/config/database.js';
-import authRoutes from '../../api/routes/auth.js';
-import profileRoutes from '../../api/routes/profile.js';
-import uploadRoutes from '../../api/routes/upload.js';
+
+// Import API routes
+import authRoutes from '../../api/routes/auth.ts';
+import profileRoutes from '../../api/routes/profile.ts';
+import uploadRoutes from '../../api/routes/upload.ts';
 
 // Load environment variables
 dotenv.config();
