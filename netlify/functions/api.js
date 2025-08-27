@@ -21,9 +21,10 @@ const handler = async (event, context) => {
   
   try {
     const path = event.path.replace('/.netlify/functions/api', '');
+    console.log('Processed path:', path, 'Original path:', event.path);
     
     // Health check endpoint
-    if (path === '/health' || path === '/api/health' || path === '') {
+    if (path === '/health' || path === '' || path === '/') {
       return {
         statusCode: 200,
         headers,
@@ -37,7 +38,7 @@ const handler = async (event, context) => {
     }
     
     // Profile endpoint
-    if (path === '/profile' || path === '/api/profile') {
+    if (path === '/profile') {
       if (event.httpMethod === 'GET') {
         // Get fallback profile from environment or default
         const fallbackProfile = {
@@ -101,7 +102,7 @@ const handler = async (event, context) => {
     }
     
     // Upload endpoint
-    if (path === '/upload' || path === '/api/upload') {
+    if (path === '/upload') {
       if (event.httpMethod === 'POST') {
         try {
           // Parse multipart form data (simplified)
