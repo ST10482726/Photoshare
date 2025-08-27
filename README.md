@@ -52,14 +52,14 @@ A modern photo sharing application built with React, Express.js, and MongoDB. Us
    - Copy `.env.example` to `.env` (if available)
    - Update the MongoDB connection string in `.env`:
    ```env
-   MONGODB_URI=mongodb+srv://st10482726<YOUR_PASSWORD>@cluster0.iww0dy5.mongodb.net/retryWrites=true&w=majority&appName=Cluster0
+   MONGODB_URI=mongodb+srv://<YOUR_USERNAME>:<YOUR_PASSWORD>@<YOUR_CLUSTER>.mongodb.net/<YOUR_DATABASE>?retryWrites=true&w=majority
    NODE_ENV=development
    PORT=3001
    UPLOAD_DIR=./uploads
    MAX_FILE_SIZE=5242880
    CORS_ORIGIN=http://localhost:5173
    ```
-   - Replace `<YOUR_PASSWORD>` with your actual MongoDB Atlas password
+   - Replace `<YOUR_USERNAME>`, `<YOUR_PASSWORD>`, `<YOUR_CLUSTER>`, and `<YOUR_DATABASE>` with your actual MongoDB Atlas credentials
 
 4. **Start the development server**:
    ```bash

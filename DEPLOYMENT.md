@@ -11,7 +11,7 @@ This guide provides instructions for deploying the PhotoShare application to var
 ## Required Environment Variables
 
 ```
-MONGODB_URI=mongodb+srv://st10482726<YOUR_PASSWORD>@cluster0.iww0dy5.mongodb.net/retryWrites=true&w=majority&appName=Cluster0
+MONGODB_URI=mongodb+srv://<YOUR_USERNAME>:<YOUR_PASSWORD>@<YOUR_CLUSTER>.mongodb.net/<YOUR_DATABASE>?retryWrites=true&w=majority
 NODE_ENV=production
 PORT=3001
 UPLOAD_DIR=./uploads

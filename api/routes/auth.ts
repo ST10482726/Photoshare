@@ -49,7 +49,7 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     res.status(200).json({ 
       message: 'Login successful',
       user: { email },
-      token: 'mock-jwt-token'
+      token: 'demo-token-placeholder'
     });
   } catch (error) {
     res.status(500).json({ error: 'Login failed' });
