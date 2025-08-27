@@ -20,7 +20,12 @@ const handler = async (event, context) => {
   }
   
   try {
-    const path = event.path.replace('/.netlify/functions/api', '');
+    // Remove the Netlify function prefix to get the actual path
+    let path = event.path.replace('/.netlify/functions/api', '') || '/';
+    // Handle both /api/profile and /profile paths
+    if (path.startsWith('/api/')) {
+      path = path.replace('/api', '');
+    }
     console.log('Processed path:', path, 'Original path:', event.path);
     
     // Health check endpoint
