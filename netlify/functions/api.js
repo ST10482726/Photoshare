@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import serverless from 'serverless-http';
 import dotenv from 'dotenv';
-import { connectToDatabase } from '../../api/config/database.js';
+import connectDB from '../../api/config/database.js';
 import authRoutes from '../../api/routes/auth.js';
 import profileRoutes from '../../api/routes/profile.js';
 import uploadRoutes from '../../api/routes/upload.js';
@@ -34,7 +34,7 @@ let dbInitialized = false;
 async function initializeDatabase() {
   if (!dbInitialized) {
     try {
-      await connectToDatabase();
+      await connectDB();
       console.log('Database connected successfully');
       global.mongoDBAvailable = true;
       dbInitialized = true;
