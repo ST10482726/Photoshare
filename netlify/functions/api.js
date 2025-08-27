@@ -86,5 +86,25 @@ app.use('*', (req, res) => {
   });
 });
 
-// Export the serverless function
-export const handler = serverless(app);
+// Add debugging for Netlify Functions
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
+  next();
+});
+
+// Export the serverless function with error handling
+const handler = serverless(app);
+
+export { handler };
+
+// Add a simple health check at root level
+export const healthCheck = async (event, context) => {
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      event: event.httpMethod + ' ' + event.path
+    })
+  };
+};
