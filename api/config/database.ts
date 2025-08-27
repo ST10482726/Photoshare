@@ -13,7 +13,9 @@ const connectDB = async (retries = 3): Promise<void> => {
     family: 4, // Use IPv4, skip trying IPv6
     maxPoolSize: 10,
     retryWrites: true,
-     w: 'majority' as const
+    w: 'majority' as const,
+    tls: true,
+    tlsInsecure: true
   };
   
   for (let attempt = 1; attempt <= retries; attempt++) {
