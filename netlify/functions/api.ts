@@ -5,9 +5,9 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 
 // Import routes
-import authRoutes from '../../api/routes/auth.js';
-import profileRoutes from '../../api/routes/profile.js';
-import uploadRoutes from '../../api/routes/upload.js';
+import authRoutes from '../../api/routes/auth';
+import profileRoutes from '../../api/routes/profile';
+import uploadRoutes from '../../api/routes/upload';
 
 const app = express();
 
@@ -82,7 +82,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
   // Create serverless handler
   const serverlessHandler = serverless(app);
   
-  return serverlessHandler(event, context);
+  return await serverlessHandler(event, context) as any;
 };
 
 export { handler };

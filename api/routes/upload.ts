@@ -3,9 +3,9 @@ import multer from 'multer';
 import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs/promises';
-import Profile from '../models/Profile.js';
-import ImageMetadata from '../models/ImageMetadata.js';
-import { getOrCreateProfile } from '../services/dbInit.js';
+import Profile from '../models/Profile';
+import ImageMetadata from '../models/ImageMetadata';
+import { getOrCreateProfile } from '../services/dbInit';
 
 const router = express.Router();
 

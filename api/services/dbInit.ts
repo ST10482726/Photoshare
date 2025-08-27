@@ -1,4 +1,4 @@
-import Profile from '../models/Profile.js';
+import Profile from '../models/Profile';
 
 export const initializeDefaultProfile = async (): Promise<void> => {
   try {

@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
-import Profile from '../models/Profile.js';
-import { getOrCreateProfile } from '../services/dbInit.js';
+import Profile from '../models/Profile';
+import { getOrCreateProfile } from '../services/dbInit';
 
 const router = express.Router();
 
