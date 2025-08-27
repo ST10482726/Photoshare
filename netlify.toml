@@ -5,12 +5,37 @@
 [build.environment]
   NODE_VERSION = "18"
 
+# Redirect all API calls to the serverless functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Handle client-side routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-[dev]
-  command = "npm run dev"
-  port = 5173
-  publish = "dist"
+# Headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
+
+# Cache static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Environment variables (set these in Netlify dashboard)
+# MONGODB_URI
+# NODE_ENV=production
+# UPLOAD_DIR=./uploads
+# MAX_FILE_SIZE=5242880
+# CORS_ORIGIN=https://your-app.netlify.app
