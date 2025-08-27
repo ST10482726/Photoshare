@@ -31,7 +31,7 @@ If IP whitelisting continues to be problematic, we can implement the MongoDB Atl
 ```javascript
 // Alternative API-based approach
 const ATLAS_DATA_API_URL = 'https://data.mongodb-api.com/app/data-xxxxx/endpoint/data/v1';
-const API_KEY = 'your-api-key';
+const API_KEY = process.env.MONGODB_API_KEY; // Set this in your environment variables
 
 const headers = {
   'Content-Type': 'application/json',
