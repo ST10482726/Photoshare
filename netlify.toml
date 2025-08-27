@@ -1,11 +1,10 @@
 [build]
   publish = "dist"
-  command = "npm ci && npm run build"
+  command = "npm install && npm run build"
   functions = "netlify/functions"
   
 [build.environment]
   NODE_VERSION = "20"
-  NPM_FLAGS = "--production=false"
 
 # Redirect API calls to serverless functions
 [[redirects]]
