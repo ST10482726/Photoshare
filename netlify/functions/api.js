@@ -1,4 +1,4 @@
-// Simple Netlify Function for testing
+// Netlify Function with fallback profile support
 const handler = async (event, context) => {
   console.log('Function called:', event.httpMethod, event.path);
   
@@ -39,44 +39,110 @@ const handler = async (event, context) => {
     // Profile endpoint
     if (path === '/profile' || path === '/api/profile') {
       if (event.httpMethod === 'GET') {
+        // Get fallback profile from environment or default
+        const fallbackProfile = {
+          firstName: process.env.FALLBACK_FIRST_NAME || 'John',
+          lastName: process.env.FALLBACK_LAST_NAME || 'Doe',
+          profileImage: process.env.FALLBACK_PROFILE_IMAGE || null
+        };
+        
         return {
           statusCode: 200,
           headers,
           body: JSON.stringify({
             success: true,
-            profile: {
-              firstName: 'Test',
-              lastName: 'User',
-              profileImage: null
-            }
+            profile: fallbackProfile
           })
         };
       }
       
       if (event.httpMethod === 'PUT') {
-        return {
-          statusCode: 200,
-          headers,
-          body: JSON.stringify({
-            success: true,
-            message: 'Profile updated successfully'
-          })
-        };
+        try {
+          const body = JSON.parse(event.body || '{}');
+          console.log('Profile update request:', body);
+          
+          // Validate required fields
+          if (!body.firstName || !body.lastName) {
+            return {
+              statusCode: 400,
+              headers,
+              body: JSON.stringify({
+                success: false,
+                error: 'First name and last name are required'
+              })
+            };
+          }
+          
+          // Since we're using fallback mode, just return success
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({
+              success: true,
+              message: 'Profile updated successfully (fallback mode)',
+              profile: {
+                firstName: body.firstName,
+                lastName: body.lastName,
+                profileImage: body.profileImage || null
+              }
+            })
+          };
+        } catch (parseError) {
+          return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({
+              success: false,
+              error: 'Invalid JSON in request body'
+            })
+          };
+        }
       }
     }
     
     // Upload endpoint
     if (path === '/upload' || path === '/api/upload') {
       if (event.httpMethod === 'POST') {
-        return {
-          statusCode: 200,
-          headers,
-          body: JSON.stringify({
-            success: true,
-            message: 'Image uploaded successfully',
-            imageUrl: 'data:image/jpeg;base64,test'
-          })
-        };
+        try {
+          // Parse multipart form data (simplified)
+          const contentType = event.headers['content-type'] || event.headers['Content-Type'] || '';
+          
+          if (contentType.includes('multipart/form-data')) {
+            // For now, return a mock success response
+            // In a real implementation, you'd parse the multipart data
+            const mockImageUrl = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=';
+            
+            return {
+              statusCode: 200,
+              headers,
+              body: JSON.stringify({
+                success: true,
+                message: 'Image uploaded successfully (fallback mode)',
+                imageUrl: mockImageUrl
+              })
+            };
+          } else {
+            return {
+              statusCode: 400,
+              headers,
+              body: JSON.stringify({
+                success: false,
+                error: 'Content-Type must be multipart/form-data'
+              })
+            };
+          }
+        } catch (uploadError) {
+          console.error('Upload error:', uploadError);
+          return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({
+              success: false,
+              error: 'Upload failed',
+              message: uploadError.message
+            })
+          };
+        }
       }
     }
     
@@ -103,6 +169,6 @@ const handler = async (event, context) => {
       })
     };
   }
-};
+ };
 
 module.exports = { handler };
