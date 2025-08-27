@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const imageMetadataSchema = new Schema({
@@ -36,4 +36,4 @@ imageMetadataSchema.index({ fileName: 1 }, { unique: true });
 
 const ImageMetadata = mongoose.model('ImageMetadata', imageMetadataSchema);
 
-export default ImageMetadata;
+module.exports = ImageMetadata;

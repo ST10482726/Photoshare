@@ -1,180 +1,82 @@
-// Netlify Function with fallback profile support
-const handler = async (event, context) => {
-  console.log('Function called:', event.httpMethod, event.path);
-  
-  // Handle CORS
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Content-Type': 'application/json'
-  };
-  
-  // Handle preflight requests
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: ''
-    };
+const express = require('express');
+const serverless = require('serverless-http');
+const cors = require('cors');
+const mongoose = require('mongoose');
+
+// Import routes
+const authRoutes = require('./routes/auth.js');
+const profileRoutes = require('./routes/profile.js');
+const uploadRoutes = require('./routes/upload.js');
+const connectDB = require('./config/database.js');
+
+const app = express();
+
+// CORS configuration
+const corsOptions = {
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:4173',
+    'https://st10482726photoshare.netlify.app'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Initialize MongoDB connection
+let isConnected = false;
+
+const connectToDatabase = async () => {
+  if (isConnected) {
+    return;
   }
-  
+
   try {
-    // Remove the Netlify function prefix to get the actual path
-    let path = event.path.replace('/.netlify/functions/api', '') || '/';
-    // Handle both /api/profile and /profile paths
-    if (path.startsWith('/api/')) {
-      path = path.replace('/api', '');
-    }
-    console.log('Processed path:', path, 'Original path:', event.path);
-    
-    // Health check endpoint
-    if (path === '/health' || path === '' || path === '/') {
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({
-          status: 'ok',
-          timestamp: new Date().toISOString(),
-          path: event.path,
-          method: event.httpMethod
-        })
-      };
-    }
-    
-    // Profile endpoint
-    if (path === '/profile') {
-      if (event.httpMethod === 'GET') {
-        // Get fallback profile from environment or default
-        const fallbackProfile = {
-          firstName: process.env.FALLBACK_FIRST_NAME || 'John',
-          lastName: process.env.FALLBACK_LAST_NAME || 'Doe',
-          profileImage: process.env.FALLBACK_PROFILE_IMAGE || null
-        };
-        
-        return {
-          statusCode: 200,
-          headers,
-          body: JSON.stringify({
-            success: true,
-            profile: fallbackProfile
-          })
-        };
-      }
-      
-      if (event.httpMethod === 'PUT') {
-        try {
-          const body = JSON.parse(event.body || '{}');
-          console.log('Profile update request:', body);
-          
-          // Validate required fields
-          if (!body.firstName || !body.lastName) {
-            return {
-              statusCode: 400,
-              headers,
-              body: JSON.stringify({
-                success: false,
-                error: 'First name and last name are required'
-              })
-            };
-          }
-          
-          // Since we're using fallback mode, just return success
-          return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({
-              success: true,
-              message: 'Profile updated successfully (fallback mode)',
-              profile: {
-                firstName: body.firstName,
-                lastName: body.lastName,
-                profileImage: body.profileImage || null
-              }
-            })
-          };
-        } catch (parseError) {
-          return {
-            statusCode: 400,
-            headers,
-            body: JSON.stringify({
-              success: false,
-              error: 'Invalid JSON in request body'
-            })
-          };
-        }
-      }
-    }
-    
-    // Upload endpoint
-    if (path === '/upload') {
-      if (event.httpMethod === 'POST') {
-        try {
-          // Parse multipart form data (simplified)
-          const contentType = event.headers['content-type'] || event.headers['Content-Type'] || '';
-          
-          if (contentType.includes('multipart/form-data')) {
-            // For now, return a mock success response
-            // In a real implementation, you'd parse the multipart data
-            const mockImageUrl = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=';
-            
-            return {
-              statusCode: 200,
-              headers,
-              body: JSON.stringify({
-                success: true,
-                message: 'Image uploaded successfully (fallback mode)',
-                imageUrl: mockImageUrl
-              })
-            };
-          } else {
-            return {
-              statusCode: 400,
-              headers,
-              body: JSON.stringify({
-                success: false,
-                error: 'Content-Type must be multipart/form-data'
-              })
-            };
-          }
-        } catch (uploadError) {
-          console.error('Upload error:', uploadError);
-          return {
-            statusCode: 500,
-            headers,
-            body: JSON.stringify({
-              success: false,
-              error: 'Upload failed',
-              message: uploadError.message
-            })
-          };
-        }
-      }
-    }
-    
-    // 404 for other paths
-    return {
-      statusCode: 404,
-      headers,
-      body: JSON.stringify({
-        success: false,
-        error: 'Endpoint not found',
-        path: event.path
-      })
-    };
-    
+    await connectDB();
+    isConnected = true;
   } catch (error) {
-    console.error('Function error:', error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        success: false,
-        error: 'Internal server error',
-        message: error.message
-      })
-    };
+    console.error('MongoDB connection error:', error);
+    // Don't throw error, let the app continue with fallback mode
   }
- };
+};
+
+// Routes
+app.use('/api/auth', authRoutes.default || authRoutes);
+app.use('/api/profile', profileRoutes.default || profileRoutes);
+app.use('/api/upload', uploadRoutes.default || uploadRoutes);
+
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Error handling middleware
+app.use((error, req, res, next) => {
+  console.error('Error:', error);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+  });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// Netlify Function handler
+const handler = async (event, context) => {
+  // Connect to database on each function call
+  await connectToDatabase();
+  
+  // Create serverless handler
+  const serverlessHandler = serverless(app);
+  
+  return await serverlessHandler(event, context);
+};
 
 module.exports = { handler };

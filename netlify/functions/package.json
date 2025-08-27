@@ -1,7 +1,7 @@
 {
   "name": "photoshare-netlify-functions",
   "version": "1.0.0",
-  "type": "module",
+  "type": "commonjs",
   "dependencies": {
     "express": "^4.18.2",
     "mongoose": "^8.0.0",

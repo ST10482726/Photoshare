@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const connectDB = async (retries = 3) => {
   const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/photoshare';
@@ -7,13 +7,13 @@ const connectDB = async (retries = 3) => {
   global.mongoDBAvailable = true;
   
   console.log('Attempting to connect to MongoDB...');
-  console.log('Connection URI:', mongoURI.replace(/://([^:]+):([^@]+)@/, '://***:***@'));
+  console.log('Connection URI configured');
   
-  // MongoDB Atlas compatible options
+  // MongoDB Atlas compatible options with faster timeouts for fallback
   const options = {
-    serverSelectionTimeoutMS: 30000, // 30 seconds
-    socketTimeoutMS: 45000, // 45 seconds
-    connectTimeoutMS: 30000, // 30 seconds
+    serverSelectionTimeoutMS: 5000, // 5 seconds
+    socketTimeoutMS: 10000, // 10 seconds
+    connectTimeoutMS: 5000, // 5 seconds
     maxPoolSize: 10,
     minPoolSize: 1,
     maxIdleTimeMS: 30000
@@ -49,8 +49,8 @@ const connectDB = async (retries = 3) => {
         return;
       }
       
-      console.log(`Retrying in 5 seconds...`);
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      console.log(`Retrying in 2 seconds...`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
   }
 };
@@ -76,4 +76,4 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-export default connectDB;
+module.exports = connectDB;

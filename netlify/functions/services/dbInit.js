@@ -1,4 +1,4 @@
-import Profile from '../models/Profile.js';
+const Profile = require('../models/Profile.js');
 
 const initializeDefaultProfile = async () => {
   try {
@@ -48,4 +48,4 @@ const getOrCreateProfile = async () => {
   }
 };
 
-export { initializeDefaultProfile, getOrCreateProfile };
+module.exports = { initializeDefaultProfile, getOrCreateProfile };

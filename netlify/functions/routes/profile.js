@@ -1,7 +1,7 @@
-import express from 'express';
-import Profile from '../models/Profile.js';
-import { getOrCreateProfile } from '../services/dbInit.js';
-import { getFallbackProfile, updateFallbackProfile } from '../services/fallbackProfile.js';
+const express = require('express');
+const Profile = require('../models/Profile.js');
+const { getOrCreateProfile } = require('../services/dbInit.js');
+const { getFallbackProfile, updateFallbackProfile } = require('../services/fallbackProfile.js');
 
 const router = express.Router();
 
@@ -139,4 +139,4 @@ router.put('/', async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;

@@ -2,7 +2,7 @@
  * This is a user authentication API route demo.
  * Handle user registration, login, token management, etc.
  */
-import { Router } from 'express';
+const { Router } = require('express');
 
 const router = Router();
 
@@ -68,4 +68,4 @@ router.post('/logout', async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;

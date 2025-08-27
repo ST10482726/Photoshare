@@ -11,12 +11,12 @@ let fallbackProfile = {
 };
 
 // Get the current fallback profile
-export const getFallbackProfile = () => {
+const getFallbackProfile = () => {
   return { ...fallbackProfile }; // Return a copy to prevent direct mutation
 };
 
 // Update the fallback profile
-export const updateFallbackProfile = (updates) => {
+const updateFallbackProfile = (updates) => {
   fallbackProfile = {
     ...fallbackProfile,
     ...updates,
@@ -26,7 +26,7 @@ export const updateFallbackProfile = (updates) => {
 };
 
 // Reset fallback profile to default values
-export const resetFallbackProfile = () => {
+const resetFallbackProfile = () => {
   fallbackProfile = {
     _id: '1',
     firstName: 'Kheepo',
@@ -37,7 +37,7 @@ export const resetFallbackProfile = () => {
   return { ...fallbackProfile };
 };
 
-export default {
+module.exports = {
   getFallbackProfile,
   updateFallbackProfile,
   resetFallbackProfile

@@ -5,9 +5,10 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 
 // Import routes
-import authRoutes from '../../api/routes/auth.js';
-import profileRoutes from '../../api/routes/profile.js';
-import uploadRoutes from '../../api/routes/upload.js';
+import authRoutes from './routes/auth.js';
+import profileRoutes from './routes/profile.js';
+import uploadRoutes from './routes/upload.js';
+import connectDB from './config/database.js';
 
 const app = express();
 
@@ -27,7 +28,7 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Connect to MongoDB
+// Initialize MongoDB connection
 let isConnected = false;
 
 const connectToDatabase = async () => {
@@ -36,17 +37,11 @@ const connectToDatabase = async () => {
   }
 
   try {
-    const mongoUri = process.env.MONGODB_URI;
-    if (!mongoUri) {
-      throw new Error('MONGODB_URI environment variable is not set');
-    }
-
-    await mongoose.connect(mongoUri);
+    await connectDB();
     isConnected = true;
-    console.log('Connected to MongoDB');
   } catch (error) {
     console.error('MongoDB connection error:', error);
-    throw error;
+    // Don't throw error, let the app continue with fallback mode
   }
 };
 

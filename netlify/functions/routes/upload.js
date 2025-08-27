@@ -1,10 +1,10 @@
-import express from 'express';
-import multer from 'multer';
-import path from 'path';
-import Profile from '../models/Profile.js';
-import ImageMetadata from '../models/ImageMetadata.js';
-import { getOrCreateProfile } from '../services/dbInit.js';
-import { getFallbackProfile, updateFallbackProfile } from '../services/fallbackProfile.js';
+const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const Profile = require('../models/Profile.js');
+const ImageMetadata = require('../models/ImageMetadata.js');
+const { getOrCreateProfile } = require('../services/dbInit.js');
+const { getFallbackProfile, updateFallbackProfile } = require('../services/fallbackProfile.js');
 
 const router = express.Router();
 
@@ -136,4 +136,4 @@ router.use((error, req, res, next) => {
   next(error);
 });
 
-export default router;
+module.exports = router;

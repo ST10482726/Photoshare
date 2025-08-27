@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Edit3, User, Settings } from 'lucide-react';
 
 interface Profile {
@@ -11,12 +11,30 @@ interface Profile {
 
 export default function Home() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadProfile();
   }, []);
+
+  // Reload profile when navigating back to home page
+  useEffect(() => {
+    const handleFocus = () => {
+      loadProfile();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
+  // Also reload when location changes (navigation)
+  useEffect(() => {
+    if (location.pathname === '/') {
+      loadProfile();
+    }
+  }, [location.pathname]);
 
   const loadProfile = async () => {
     try {
