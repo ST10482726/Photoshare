@@ -1,6 +1,5 @@
 import express, { Request, Response } from 'express';
 import multer from 'multer';
-import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs/promises';
 import Profile from '../models/Profile';
@@ -39,9 +38,10 @@ router.post('/', upload.single('image'), async (req: Request, res: Response) => 
     // Get or create profile
     const profile = await getOrCreateProfile();
 
-    // Generate unique filename
+    // Generate unique filename with original extension
     const timestamp = Date.now();
-    const fileName = `profile-${profile._id}-${timestamp}.jpg`;
+    const fileExtension = path.extname(req.file.originalname) || '.jpg';
+    const fileName = `profile-${profile._id}-${timestamp}${fileExtension}`;
     
     // Define upload directory and file path
     const uploadDir = path.join(process.cwd(), 'public/uploads');
@@ -54,21 +54,15 @@ router.post('/', upload.single('image'), async (req: Request, res: Response) => 
       await fs.mkdir(uploadDir, { recursive: true });
     }
 
-    // Process image with Sharp
-    await sharp(req.file.buffer)
-      .resize(400, 400, {
-        fit: 'cover',
-        position: 'center'
-      })
-      .jpeg({ quality: 85 })
-      .toFile(filePath);
+    // Save the uploaded file directly (without Sharp processing)
+    await fs.writeFile(filePath, req.file.buffer);
 
     // Save image metadata
     const imageMetadata = new ImageMetadata({
       profileId: profile._id,
       originalName: req.file.originalname,
       fileName: fileName,
-      mimeType: 'image/jpeg', // Always JPEG after processing
+      mimeType: req.file.mimetype, // Keep original mime type
       fileSize: req.file.size
     });
     
