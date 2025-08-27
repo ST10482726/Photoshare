@@ -16,20 +16,33 @@ let fallbackProfile = {
 // GET /api/profile - Get user profile
 router.get('/', async (req: Request, res: Response) => {
   try {
-    // Try to get from MongoDB first
-    const profile = await getOrCreateProfile();
+    // Check if MongoDB is available
+    if ((global as any).mongoDBAvailable !== false) {
+      try {
+        const profile = await getOrCreateProfile();
+        
+        return res.json({
+          id: profile._id,
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          profileImage: profile.profileImage,
+          updatedAt: profile.updatedAt
+        });
+      } catch (error) {
+        console.error('MongoDB error, using fallback profile:', error);
+        (global as any).mongoDBAvailable = false;
+      }
+    }
     
-    res.json({
-      id: profile._id,
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      profileImage: profile.profileImage,
-      updatedAt: profile.updatedAt
-    });
-  } catch (error) {
-    console.error('MongoDB error, using fallback profile:', error);
     // Use fallback profile if MongoDB is not available
+    console.log('Using fallback profile data');
     res.json(fallbackProfile);
+  } catch (error) {
+    console.error('Error in profile GET route:', error);
+    res.status(500).json({
+      error: 'Failed to load profile data',
+      fallback: fallbackProfile
+    });
   }
 });
 
@@ -53,47 +66,53 @@ router.put('/', async (req: Request, res: Response) => {
       });
     }
     
-    try {
-      // Try to update MongoDB first
-      let profile = await Profile.findOne();
-      
-      if (!profile) {
-        // Create new profile
-        profile = new Profile({
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          profileImage: '/kheepo-profile.jpg'
-        });
-      } else {
-        // Update existing profile
-        profile.firstName = firstName.trim();
-        profile.lastName = lastName.trim();
-      }
-      
-      await profile.save();
-      
-      res.json({
-        success: true,
-        profile: {
-          id: profile._id,
-          firstName: profile.firstName,
-          lastName: profile.lastName,
-          profileImage: profile.profileImage,
-          updatedAt: profile.updatedAt
+    // Check if MongoDB is available
+    if ((global as any).mongoDBAvailable !== false) {
+      try {
+        let profile = await Profile.findOne();
+        
+        if (!profile) {
+          // Create new profile
+          profile = new Profile({
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+            profileImage: '/kheepo-profile.jpg'
+          });
+        } else {
+          // Update existing profile
+          profile.firstName = firstName.trim();
+          profile.lastName = lastName.trim();
         }
-      });
-    } catch (dbError) {
-      console.error('MongoDB error, using fallback profile:', dbError);
-      // Update fallback profile if MongoDB is not available
-      fallbackProfile.firstName = firstName.trim();
-      fallbackProfile.lastName = lastName.trim();
-      fallbackProfile.updatedAt = new Date().toISOString();
-      
-      res.json({
-        success: true,
-        profile: fallbackProfile
-      });
+        
+        await profile.save();
+        
+        return res.json({
+          success: true,
+          profile: {
+            id: profile._id,
+            firstName: profile.firstName,
+            lastName: profile.lastName,
+            profileImage: profile.profileImage,
+            updatedAt: profile.updatedAt
+          }
+        });
+      } catch (dbError) {
+        console.error('MongoDB error, using fallback profile:', dbError);
+        (global as any).mongoDBAvailable = false;
+      }
     }
+    
+    // Update fallback profile if MongoDB is not available
+    console.log('Updating fallback profile data');
+    fallbackProfile.firstName = firstName.trim();
+    fallbackProfile.lastName = lastName.trim();
+    fallbackProfile.updatedAt = new Date().toISOString();
+    
+    res.json({
+      success: true,
+      profile: fallbackProfile,
+      note: 'Profile updated in fallback mode (MongoDB unavailable)'
+    });
   } catch (error) {
     console.error('Error updating profile:', error);
     res.status(500).json({

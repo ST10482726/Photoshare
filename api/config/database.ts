@@ -3,19 +3,20 @@ import mongoose from 'mongoose';
 const connectDB = async (retries = 3): Promise<void> => {
   const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/photoshare';
   
+  // Initialize MongoDB availability flag
+  (global as any).mongoDBAvailable = true;
+  
   console.log('Attempting to connect to MongoDB...');
   console.log('Connection URI:', mongoURI.replace(/:\/\/([^:]+):([^@]+)@/, '://***:***@'));
   
+  // MongoDB Atlas compatible options
   const options = {
-    serverSelectionTimeoutMS: 15000, // 15 seconds
-    socketTimeoutMS: 30000, // 30 seconds
-    connectTimeoutMS: 15000, // 15 seconds
-    family: 4, // Use IPv4, skip trying IPv6
+    serverSelectionTimeoutMS: 30000, // 30 seconds
+    socketTimeoutMS: 45000, // 45 seconds
+    connectTimeoutMS: 30000, // 30 seconds
     maxPoolSize: 10,
-    retryWrites: true,
-    w: 'majority' as const,
-    tls: true,
-    tlsInsecure: true
+    minPoolSize: 1,
+    maxIdleTimeMS: 30000
   };
   
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -24,19 +25,29 @@ const connectDB = async (retries = 3): Promise<void> => {
       await mongoose.connect(mongoURI, options);
       console.log('✅ MongoDB connected successfully');
       return;
-    } catch (error) {
+    } catch (error: any) {
       console.error(`❌ Connection attempt ${attempt} failed:`, error.message);
       
       if (attempt === retries) {
-         console.error('All connection attempts failed. Will continue retrying in background...');
-         console.error('Full error details:', JSON.stringify(error, null, 2));
-         // Don't exit, let the server start and retry connection later
-         setTimeout(() => connectDB(3), 10000); // Retry after 10 seconds
-         return;
-       }
+        console.error('All connection attempts failed. Server will start without MongoDB...');
+        console.error('API will use fallback responses until connection is restored.');
+        // Set a flag to indicate MongoDB is unavailable
+        (global as any).mongoDBAvailable = false;
+        // Continue retrying in background
+        setTimeout(() => {
+          console.log('Retrying MongoDB connection in background...');
+          connectDB(3).then(() => {
+            (global as any).mongoDBAvailable = true;
+            console.log('MongoDB reconnected successfully');
+          }).catch(() => {
+            console.log('Background reconnection failed, will retry again...');
+          });
+        }, 30000); // Retry after 30 seconds
+        return;
+      }
       
-      console.log(`Retrying in 3 seconds...`);
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      console.log(`Retrying in 5 seconds...`);
+      await new Promise(resolve => setTimeout(resolve, 5000));
     }
   }
 };
@@ -44,6 +55,7 @@ const connectDB = async (retries = 3): Promise<void> => {
 // Handle connection events
 mongoose.connection.on('connected', () => {
   console.log('Mongoose connected to MongoDB');
+  (global as any).mongoDBAvailable = true;
 });
 
 mongoose.connection.on('error', (err) => {
