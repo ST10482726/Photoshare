@@ -1,5 +1,5 @@
 // Simple Netlify Function for testing
-export const handler = async (event, context) => {
+const handler = async (event, context) => {
   console.log('Function called:', event.httpMethod, event.path);
   
   // Handle CORS
@@ -104,3 +104,5 @@ export const handler = async (event, context) => {
     };
   }
 };
+
+module.exports = { handler };

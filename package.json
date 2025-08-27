@@ -13,7 +13,7 @@
     "check": "tsc -b --noEmit",
     "client:dev": "vite",
     "server:dev": "nodemon"
-  }
+  },
   "dependencies": {
     "@netlify/functions": "^4.2.4",
     "@types/multer": "^2.0.0",
