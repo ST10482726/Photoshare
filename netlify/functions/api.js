@@ -2,12 +2,12 @@ import express from 'express';
 import cors from 'cors';
 import serverless from 'serverless-http';
 import dotenv from 'dotenv';
-import connectDB from '../../api/config/database.js';
+import connectDB from './config/database.js';
 
 // Import API routes
-import authRoutes from '../../api/routes/auth.ts';
-import profileRoutes from '../../api/routes/profile.ts';
-import uploadRoutes from '../../api/routes/upload.ts';
+import authRoutes from './routes/auth.js';
+import profileRoutes from './routes/profile.js';
+import uploadRoutes from './routes/upload.js';
 
 // Load environment variables
 dotenv.config();
