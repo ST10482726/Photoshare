@@ -3,16 +3,11 @@ import multer from 'multer';
 import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs/promises';
-import { fileURLToPath } from 'url';
 import Profile from '../models/Profile.js';
 import ImageMetadata from '../models/ImageMetadata.js';
 import { getOrCreateProfile } from '../services/dbInit.js';
 
 const router = express.Router();
-
-// Get current directory for ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Configure multer for memory storage
 const upload = multer({
@@ -49,7 +44,7 @@ router.post('/', upload.single('image'), async (req: Request, res: Response) => 
     const fileName = `profile-${profile._id}-${timestamp}.jpg`;
     
     // Define upload directory and file path
-    const uploadDir = path.join(__dirname, '../../public/uploads');
+    const uploadDir = path.join(process.cwd(), 'public/uploads');
     const filePath = path.join(uploadDir, fileName);
     
     // Ensure upload directory exists

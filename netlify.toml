@@ -1,14 +1,15 @@
 [build]
   publish = "dist"
   command = "npm run build"
-
+  functions = "netlify/functions"
+  
 [build.environment]
   NODE_VERSION = "18"
 
-# Redirect all API calls to the serverless functions
+# Redirect API calls to serverless functions
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  to = "/.netlify/functions/api"
   status = 200
 
 # Handle client-side routing

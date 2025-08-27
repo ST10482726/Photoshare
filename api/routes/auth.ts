@@ -8,11 +8,27 @@ import { Router, type Request, type Response } from 'express';
 const router = Router();
 
 /**
- * User Login
+ * User Registration
  * POST /api/auth/register
  */
 router.post('/register', async (req: Request, res: Response): Promise<void> => {
-  // TODO: Implement register logic
+  try {
+    const { email, password, firstName, lastName } = req.body;
+    
+    // Basic validation
+    if (!email || !password || !firstName || !lastName) {
+      res.status(400).json({ error: 'All fields are required' });
+      return;
+    }
+    
+    // TODO: Implement actual registration logic with database
+    res.status(201).json({ 
+      message: 'User registered successfully',
+      user: { email, firstName, lastName }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Registration failed' });
+  }
 });
 
 /**
@@ -20,7 +36,24 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
  * POST /api/auth/login
  */
 router.post('/login', async (req: Request, res: Response): Promise<void> => {
-  // TODO: Implement login logic
+  try {
+    const { email, password } = req.body;
+    
+    // Basic validation
+    if (!email || !password) {
+      res.status(400).json({ error: 'Email and password are required' });
+      return;
+    }
+    
+    // TODO: Implement actual login logic with database
+    res.status(200).json({ 
+      message: 'Login successful',
+      user: { email },
+      token: 'mock-jwt-token'
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Login failed' });
+  }
 });
 
 /**
@@ -28,7 +61,12 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
  * POST /api/auth/logout
  */
 router.post('/logout', async (req: Request, res: Response): Promise<void> => {
-  // TODO: Implement logout logic
+  try {
+    // TODO: Implement actual logout logic (invalidate token, etc.)
+    res.status(200).json({ message: 'Logout successful' });
+  } catch (error) {
+    res.status(500).json({ error: 'Logout failed' });
+  }
 });
 
 export default router;
