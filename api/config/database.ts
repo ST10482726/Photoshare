@@ -22,7 +22,10 @@ const connectDB = async (retries = 3): Promise<void> => {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       console.log(`Connection attempt ${attempt}/${retries}...`);
-      await mongoose.connect(mongoURI, options);
+      await mongoose.connect(mongoURI, {
+        ...options,
+        family: 4 // Use IPv4
+      });
       console.log('✅ MongoDB connected successfully');
       return;
     } catch (error: any) {
